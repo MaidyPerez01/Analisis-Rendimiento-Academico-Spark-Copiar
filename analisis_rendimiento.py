@@ -1,4 +1,3 @@
-
 from pyspark.sql import SparkSession, functions as F
 import matplotlib
 matplotlib.use("Agg")
@@ -106,7 +105,39 @@ plt.ylim(0, 20)
 plt.tight_layout()
 plt.savefig("grafica_ausencias.png", dpi=150)
 plt.close()
+print("Graficas generadas correctamente")
+spark.stop()# Gráfica 3: ausencias
+filas_ausencias = sorted(
+    ausencias.collect(),
+    key=lambda r: {
+        "0 ausencias": 0,
+        "1 a 5 ausencias": 1,
+        "6 o mas ausencias": 2
+    }[r["Grupo_Ausencias"]]
+)
+plt.figure(figsize=(8, 4))
+plt.bar(
+    [r["Grupo_Ausencias"] for r in filas_ausencias],
+    [r["Promedio_Final"] for r in filas_ausencias]
+)
+plt.title("Rendimiento segun ausencias")
+plt.ylabel("Promedio final")
+plt.ylim(0, 20)
+plt.tight_layout()
+plt.savefig("grafica_ausencias.png", dpi=150)
+plt.close()
 
 print("Graficas generadas correctamente")
+# Analisis mediante Spark SQL
+datos.createOrReplaceTempView("estudiantes")
+print("RESULTADOS SPARK SQL")
+spark.sql("""
+SELECT studytime AS Tiempo_Estudio,
+       COUNT(*) AS Estudiantes,
+       ROUND(AVG(G3), 2) AS Promedio_Final
+FROM estudiantes
+GROUP BY studytime
+ORDER BY studytime
+""").show()
+
 spark.stop()
-  
